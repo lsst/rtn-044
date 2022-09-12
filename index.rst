@@ -21,13 +21,13 @@ Architecture
 
 Postgres is deployed on Kubernetes using the CloudNativePG (CNPG) Kuberneter opeator.  CNPG is an open source project developed by Enterprise DB.  The CNPG Operator includes built in capabilities to manage upgrades, high availability, replication, and backup.  Commerical support is available for a fee.
 
-A seperate development Kubernetes cluster and production Kubernetes cluster are deployed.  This allows for testing both operator functionality and configuration prior to deploying in production.
+A seperate development Kubernetes cluster and production Kubernetes cluster are deployed.  This allows for testing both operator functionality and configuration prior to deploying in production.  2 replicas are deployed in active > passive.  16 CPUs and 64 GB is allocated.  For scaling read replicas will be provisioned to handle the read load.  Standby replicas are exposed through a seperate PgBouncer read only instance.
 
 The following are outstanding questions.
 
-- A Butler registry will be distinct for each data release.  Will there be a seperate cluster per release or database?  Will joins be needed across data registries?
+- Authentication and user management approach
 
-For scaling read replicas will be provisioned to handle the read load.  Standby replicas are exposed through a seperate PgBouncer read only instance.
+- A Butler registry will be distinct for each data release.  Will there be a seperate cluster per release or database?  Will joins be needed across data registries?
 
 Version
 =======
@@ -41,13 +41,14 @@ The storage for the CNGP clusters is on Weka storage using the Container Storage
 
 Total storage is forecast to be 100s of Terabytes per year.
 
-
 Access Methods
 ==============
 
-PgBouncer is a lightweight connection pooler for client connections.  PgBouncer front ends connections for connection pooling and protecting access to the database.  All end user access to the database will be through Butler.  Butler uses SQL Alchemy in driver mode and not ORM mode.  No direct access through PSQL or other Postgres administrative tools is required by end users.  Butler Postgres does not require external connectivty outside of USDF so no external IP address is needed on the database.
+All end user access to the database will be through Butler.  Butler uses SQL Alchemy in driver mode and not ORM mode.  No direct access through PSQL or other Postgres administrative tools is required by end users.  Butler Postgres does not require external connectivity outside of USDF so no external IP address is needed on the database.
 
 Postgres administrators will be able to use PSQL and other tools to perform administrative functions.  PSQL can be run through the S3DF Rubin Servers.
+
+PgBouncer is a lightweight connection pooler for client connections.  PgBouncer front ends connections for connection pooling and protecting access to the database.  Session mode is used for the connection pool because temporary tables are used as part of queries.  The default pool size was increased because the rubin account is shared by end users.
 
 
 Authentication and Access Control
@@ -55,9 +56,9 @@ Authentication and Access Control
 
 Security requirements for authentication and authorization are:
 
-- Expected user count is 200?
+- Expected initial user count is 200?
 - Limit management overhead as there is not staff to reset passwords
-- Track activity by user to tell who made changes
+- Track activity by user to determine who made changes
 - Is there a hybrid approach for read only users vs developers/admins?
 
 There are four types of access needed to Butler Postgres.
@@ -68,7 +69,6 @@ There are four types of access needed to Butler Postgres.
 #. Administrative access - Create databases, tables, edit roles
 
 For individual user accounts in Postgres a username needs to be created and role assigned.  
-
 
 - Shared Username (rubin) with shared password
    - Pros
