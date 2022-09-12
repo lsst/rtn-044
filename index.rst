@@ -13,7 +13,69 @@
 Abstract
 ========
 
-Postgres database design for Butler in the USDF.  Includes details on Postgres architecture in Kubernetes, authentication, backups, and monitoring/logging.
+Postgres database design for Butler in the USDF.  Includes details on Postgres architecture in Kubernetes, authentication, backups, and monitoring/logging.  The sections below are all draft and will likely change after design discussions.
+
+
+Architecture
+============
+
+Postgres is deployed on Kubernetes using the CloudNativePG (CNPG) Kuberneter opeator.  CNPG is an open source project developed by Enterprise DB.  The CNPG Operator includes built in capabilities to manage upgrades, high availability, replication, and backup.  Commerical support is available for a fee.
+
+A seperate development Kubernetes cluster and production Kubernetes cluster are deployed.  This allows for testing both operator functionality and configuration prior to deploying in production.
+
+Storage
+=======
+
+The storage for the CNGP clusters is on Weka storage using the Container Storage Interface (CSI) driver.  1000 GB is provisioned for production.  Volume expansion is supported to increase the size of the disks.  Both CNGP and the Weka CSI Plugin support for volume expansion.
+
+Version
+=======
+
+Postgres version 14 is deployed. Previously Postgres 12 was deployed at NCSA and Postgres 13 at IDF.  Postgres 14 has performance improvments and is the latest stable major version.  There are no known limitations that would prevent Butler from running on Postgres 14.
+
+
+Access Methods
+==============
+
+All end user access to the Butler Postgres database will be through Butler.  No direct access through PSQL or other Postgres administrative tools is required by end users.  Butler Postgres does not require external connectivty outside of USDF so no external IP address is needed on the database.
+
+Postgres administrators will be able to use PSQL and other tools to perform administrative functions.  PSQL can be run through the S3DF Rubin Servers.
+
+
+Authentication and Access Control
+=================================
+
+There are four types of access needed to Butler Postgres.
+1) Read only access - Read data through Butler
+1) Developer write access - Write data to Butler
+1) PaNDA Service account - Query butler from jobs and store results of job runs
+1) Administrative access - Create databases, tables, edit roles
+
+For individual user accounts in Postgres a username needs to be created and role assigned.  
+
+
+1) Shared Username (rubin) with shared password.
+
+The advantages of this approach are
+* There is no support needed to reset passwords
+* Easy to deploy and build into image without end user intervention
+* Remove risk of an developer creating a production database with only their ownership and schema
+
+2) Individual username with
+
+3) LDAP
+LDAPS and LDAP with Start TLS were tested for authentication.  Neither was able to successfully get working.  An unknown error was returned by Postgres.  It also appears that PG Bouncer does not support LDAP based on an open issue in the PG Bouncer GitHub repository.  The following options are available for authentication.
+
+scram-sha-256 will be used for password encryption as is now is the default for Postgres 14.  This encryption method was previously used by Butler in other environments.
+
+
+
+
+
+Monitoring
+==========
+
+
 
 Add content here
 ================
