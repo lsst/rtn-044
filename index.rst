@@ -23,10 +23,10 @@ Postgres is deployed on Kubernetes using the CloudNativePG (CNPG) Kuberneter ope
 
 A seperate development Kubernetes cluster and production Kubernetes cluster are deployed.  This allows for testing both operator functionality and configuration prior to deploying in production.
 
-A Butler registry will be distinct for each data release.  The following are outstanding questions.
+The following are outstanding questions.
 - A Butler registry will be distinct for each data release.  Will there be a seperate cluster per release or database?  Will joins be needed across data registries?
 
-For scaling read replicas will be provisioned to handle the read load.
+For scaling read replicas will be provisioned to handle the read load.  Standby replicas are exposed through a seperate pooler read only instance.
 
 Version
 =======
@@ -36,7 +36,7 @@ Postgres version 14 is deployed. Previously Postgres 12 was deployed at NCSA and
 Storage
 =======
 
-The storage for the CNGP clusters is on Weka storage using the Container Storage Interface (CSI) driver.  1000 GB is provisioned for production.  Volume expansion is supported to increase the size of the disks.  Both CNGP and the Weka CSI Plugin support for volume expansion.
+The storage for the CNGP clusters is on Weka storage using the Container Storage Interface (CSI) driver.  1,000 GB is provisioned for production.  Volume expansion is supported to increase the size of the disks.  Both CNGP and the Weka CSI Plugin support for volume expansion.
 
 Total storage is forecast to be 100s of Terabytes per year.
 
@@ -53,6 +53,7 @@ Authentication and Access Control
 =================================
 
 Security requirements for authentication and authorization are:
+- Expected user count is 200?
 - Limit management overhead as there is not staff to reset passwords
 - Track activity by user to tell who made changes
 - Is there a hybrid approach for read only users vs developers/admins?
@@ -60,7 +61,7 @@ Security requirements for authentication and authorization are:
 There are four types of access needed to Butler Postgres.
 
 #. Read only access - Read data through Butler
-#.  Developer write access - Write data to Butler
+#. Developer write access - Write data to Butler
 #. PaNDA Service account - Query butler from jobs and store results of job runs
 #. Administrative access - Create databases, tables, edit roles
 
