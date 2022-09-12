@@ -46,6 +46,7 @@ Authentication and Access Control
 =================================
 
 There are four types of access needed to Butler Postgres.
+
 #. Read only access - Read data through Butler
 #.  Developer write access - Write data to Butler
 #. PaNDA Service account - Query butler from jobs and store results of job runs
@@ -75,9 +76,22 @@ Monitoring
 CNPG has built in Prometheus support for the Pooler and the Database cluster.  The S3DF Prometheus instance scrapes and stores metrics.  Metrics are displayed in the S3DF Grafana.  Metrics will need to be available for <update> days.
 
 The requirements for monitoring are:
-* Cluster uptime
-* CPU, Memory usage
-* Disk available and storage by database
+
+- Per Cluster
+   - Cluster uptime
+   - CPU
+   - Memory
+      - Available
+      - Working Memory
+   - Storage used, available
+   - Connections
+      - Number of available connections
+      - Connections per database
+   - Replication and Backup
+      - Replication Lag
+      - WAL archive failures
+      - Successful and Failed backups
+- Disk available and storage by database
 
 Logging
 =======
