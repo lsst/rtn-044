@@ -13,7 +13,7 @@
 Abstract
 ========
 
-Postgres database design for Butler in the USDF.  Includes details on Postgres architecture in Kubernetes, authentication, backups, and monitoring/logging.  The sections below are all draft and will likely change after design discussions.  
+Postgres database design for Butler in the USDF.  Includes details on Postgres architecture in Kubernetes, authentication, backups, and monitoring/logging. 
 
 
 Architecture
@@ -24,9 +24,10 @@ Postgres is deployed on Kubernetes using the CloudNativePG (CNPG) Kuberneter ope
 A seperate development Kubernetes cluster and production Kubernetes cluster are deployed.  This allows for testing both operator functionality and configuration prior to deploying in production.
 
 The following are outstanding questions.
+
 - A Butler registry will be distinct for each data release.  Will there be a seperate cluster per release or database?  Will joins be needed across data registries?
 
-For scaling read replicas will be provisioned to handle the read load.  Standby replicas are exposed through a seperate pooler read only instance.
+For scaling read replicas will be provisioned to handle the read load.  Standby replicas are exposed through a seperate PgBouncer read only instance.
 
 Version
 =======
@@ -44,7 +45,7 @@ Total storage is forecast to be 100s of Terabytes per year.
 Access Methods
 ==============
 
-All end user access to the Butler Postgres database will be through Butler.  Bulter uses SQL Alchemy in driver mode and not ORM mode.  No direct access through PSQL or other Postgres administrative tools is required by end users.  Butler Postgres does not require external connectivty outside of USDF so no external IP address is needed on the database.
+PgBouncer is a lightweight connection pooler for client connections.  PgBouncer front ends connections for connection pooling and protecting access to the database.  All end user access to the database will be through Butler.  Butler uses SQL Alchemy in driver mode and not ORM mode.  No direct access through PSQL or other Postgres administrative tools is required by end users.  Butler Postgres does not require external connectivty outside of USDF so no external IP address is needed on the database.
 
 Postgres administrators will be able to use PSQL and other tools to perform administrative functions.  PSQL can be run through the S3DF Rubin Servers.
 
@@ -53,6 +54,7 @@ Authentication and Access Control
 =================================
 
 Security requirements for authentication and authorization are:
+
 - Expected user count is 200?
 - Limit management overhead as there is not staff to reset passwords
 - Track activity by user to tell who made changes
@@ -102,8 +104,9 @@ Backups
 CNPG has built in backups through Barman.  Backups are integrated with the WAL logs for both incremental full backups.  CNGP and Barman require an S3 or Google Cloud Storage interface to save backups. Full backups are configured to run nightly at midnight. Backups are saved to a Weka S3 interface.  Please note that this is same storage location that the database is stored.
 
 The long term backup requirements are to:
-* Store backup in physically outside of S3DF?
-* Backup every X amount of time?
+
+- Store backup in physically outside of S3DF?
+- Backup every X amount of time?
 
 
 Monitoring
@@ -156,10 +159,6 @@ CNPG logs to stdout and stderr.  Logs are available via the `kubectl logs` comma
 The requirements for logs are:
 
 
-Add content here
-================
-
-Add content here.
 See the `reStructuredText Style Guide <https://developer.lsst.io/restructuredtext/style.html>`__ to learn how to create sections, links, images, tables, equations, and more.
 
 .. Make in-text citations with: :cite:`bibkey`.
