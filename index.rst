@@ -157,7 +157,8 @@ Logging
 CNPG logs to stdout and stderr.  Logs are available via the `kubectl logs` command.  Currently there is not a solution for long term retention of logging.  The options are using Loki, Elasticsearch, or Gooogle Cloud Logging.  Logs will be be available for <update days>
 
 The requirements for logs are:
-
+- Store logs for X days?
+- Provide log access to administrators and developers?
 
 See the `reStructuredText Style Guide <https://developer.lsst.io/restructuredtext/style.html>`__ to learn how to create sections, links, images, tables, equations, and more.
 
