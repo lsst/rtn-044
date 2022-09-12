@@ -23,15 +23,15 @@ Postgres is deployed on Kubernetes using the CloudNativePG (CNPG) Kuberneter ope
 
 A seperate development Kubernetes cluster and production Kubernetes cluster are deployed.  This allows for testing both operator functionality and configuration prior to deploying in production.
 
-Storage
-=======
-
-The storage for the CNGP clusters is on Weka storage using the Container Storage Interface (CSI) driver.  1000 GB is provisioned for production.  Volume expansion is supported to increase the size of the disks.  Both CNGP and the Weka CSI Plugin support for volume expansion.
-
 Version
 =======
 
 Postgres version 14 is deployed. Previously Postgres 12 was deployed at NCSA and Postgres 13 at IDF.  Postgres 14 has performance improvments and is the latest stable major version.  There are no known limitations that would prevent Butler from running on Postgres 14.
+
+Storage
+=======
+
+The storage for the CNGP clusters is on Weka storage using the Container Storage Interface (CSI) driver.  1000 GB is provisioned for production.  Volume expansion is supported to increase the size of the disks.  Both CNGP and the Weka CSI Plugin support for volume expansion.
 
 
 Access Methods
@@ -46,35 +46,45 @@ Authentication and Access Control
 =================================
 
 There are four types of access needed to Butler Postgres.
-1) Read only access - Read data through Butler
-1) Developer write access - Write data to Butler
-1) PaNDA Service account - Query butler from jobs and store results of job runs
-1) Administrative access - Create databases, tables, edit roles
+1. Read only access - Read data through Butler
+1.  Developer write access - Write data to Butler
+1. PaNDA Service account - Query butler from jobs and store results of job runs
+1. Administrative access - Create databases, tables, edit roles
 
 For individual user accounts in Postgres a username needs to be created and role assigned.  
 
 
-1) Shared Username (rubin) with shared password.
+1. Shared Username (rubin) with shared password.
 
 The advantages of this approach are
 * There is no support needed to reset passwords
 * Easy to deploy and build into image without end user intervention
 * Remove risk of an developer creating a production database with only their ownership and schema
 
-2) Individual username with
+1. Individual username with
 
-3) LDAP
+1. LDAP
 LDAPS and LDAP with Start TLS were tested for authentication.  Neither was able to successfully get working.  An unknown error was returned by Postgres.  It also appears that PG Bouncer does not support LDAP based on an open issue in the PG Bouncer GitHub repository.  The following options are available for authentication.
 
 scram-sha-256 will be used for password encryption as is now is the default for Postgres 14.  This encryption method was previously used by Butler in other environments.
 
 
-
-
-
 Monitoring
 ==========
 
+CNPG has built in Prometheus support for the Pooler and the Database cluster.  The S3DF Prometheus instance scrapes and stores metrics.  Metrics are displayed in the S3DF Grafana.  Metrics will need to be available for <update> days.
+
+The requirements for monitoring are:
+* Cluster uptime
+* CPU, Memory usage
+* Disk available and storage by database
+
+Logging
+=======
+
+CNPG logs to stdout and stderr.  Logs are available via the `kubectl logs` command.  Currently there is not a solution for long term retention of logging.  The options are using Loki, Elasticsearch, or Gooogle Cloud Logging.  Logs will be be available for <update days>
+
+The requirements for logs are:
 
 
 Add content here
