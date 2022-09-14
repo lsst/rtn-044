@@ -29,6 +29,11 @@ The following are outstanding questions.
 
 - A Butler registry will be distinct for each data release.  Will there be a seperate cluster per release or database?  Will joins be needed across data registries?
 
+Deployment Repository
+=====================
+
+All butler database related manifests with current settings are kept at https://github.com/slaclab/rubin-usdf-butler-deploy/.
+
 Version
 =======
 
@@ -37,14 +42,16 @@ Postgres version 14 is deployed. Previously Postgres 12 was deployed at NCSA and
 Storage
 =======
 
-The storage for the CNGP clusters is on Weka storage using the Container Storage Interface (CSI) driver.  1,000 GB is provisioned for production.  Volume expansion is supported to increase the size of the disks.  Both CNGP and the Weka CSI Plugin support for volume expansion.
+The storage for the CNGP clusters is on Weka distributed NVMe storage using the Container Storage Interface (CSI) driver.  1,000 GB is provisioned for production.  Volume expansion is supported to increase the size of the disks.  Both CNGP and the Weka CSI Plugin support for volume expansion.
 
-Total storage is forecast to be 100s of Terabytes per year.
-
+Total storage is forecast to be 100s of Terabytes per year and will require coordination with the USDF infrastructure team to expand the Weka storage.
+ 
 Access Methods
 ==============
 
 All end user access to the database will be through Butler.  Butler uses SQL Alchemy in driver mode and not ORM mode.  No direct access through PSQL or other Postgres administrative tools is required by end users.  Butler Postgres does not require external connectivity outside of USDF so no external IP address is needed on the database.
+
+How will Cloud RSP users connect to butler?
 
 Postgres administrators will be able to use PSQL and other tools to perform administrative functions.  PSQL can be run through the S3DF Rubin Servers.
 
@@ -77,6 +84,7 @@ For individual user accounts in Postgres a username needs to be created and role
       - Remove risk of an developer creating a production database with only their ownership and schema
    - Cons:
       - Not able to track who made changes
+      - PGPooler does not scale well due to default_pool_size.
 
 - Individual username with shared password
    - Pros:
@@ -84,12 +92,14 @@ For individual user accounts in Postgres a username needs to be created and role
    - Cons:
       - Additional support overhead
       - Security implications of shared password
+      - Would require administration overhead of permissions models on postgres schemas
 
 - Individual username with passwords stored in Vault
    - Pros:
       - Able to track who made changes
    - Cons:
-      - Additional support overhead to manage passwords and expirations
+      - Would require administration overhead of permissions models on postgres schemas
+      - Users would need obtain the temporary user-password from vault and modify their db-auth.yaml file
 
 - LDAP
     - Cons
@@ -112,7 +122,7 @@ The long term backup requirements are to:
 Monitoring
 ==========
 
-CNPG has built in Prometheus support for the Pooler and the Database cluster.  The S3DF Prometheus instance scrapes and stores metrics.  Metrics are displayed in the S3DF Grafana.  Metrics will need to be available for <update> days.
+CNPG has built in Prometheus support for the Pooler and the Database cluster.  The S3DF Prometheus instance scrapes and stores metrics.  Metrics are displayed in the S3DF Grafana at https://grafana.slac.stanford.edu/d/z7FCA4Nnk/cloud-native-postgresql.  Metrics will need to be available for <update> days.
 
 The requirements for monitoring are:
 
