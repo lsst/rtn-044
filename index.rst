@@ -61,12 +61,18 @@ PgBouncer is a lightweight connection pooler for client connections.  PgBouncer 
 Authentication and Access Control
 =================================
 
-Security requirements for authentication and authorization are:
+Security requirements and considerations for authentication and authorization are:
 
-- Expected initial user count is 200?
+- Expected initial user count is 200
 - Limit management overhead as there is not staff to reset passwords
-- Track activity by user to determine who made changes
-- Is there a hybrid approach for read only users vs developers/admins?
+- Initial setup requires a postgres user and roles assigned regardless of whether the password is stored in LDAP or in Postgres
+- Track activity by user to determine who made changes.  Difficult to track by IP Address because all connections will come from a different Kubernetes cluster and NATed.
+
+Considerations for discussion
+- What would be damaging operations to Butler?  Drops, deletes?, etc..?
+- Does everyone need access to write to personal schemas and Butler schemas?  Or subset?
+- Client/Server Butler may be available at some point which removes requirements for individual user accounts for most users
+- Access model for PaNDA?
 
 There are four types of access needed to Butler Postgres.
 
@@ -81,29 +87,40 @@ For individual user accounts in Postgres a username needs to be created and role
    - Pros
       - There is no support needed to reset passwords
       - Easy to deploy and build into image without end user intervention
-      - Remove risk of an developer creating a production database with only their ownership and schema
+      - Removes risk of an developer creating a production database with only their ownership and schema
    - Cons:
       - Not able to track who made changes
-      - PGPooler does not scale well due to default_pool_size.
+      - PGPooler default_pool_size considerations around connection limits.  A single user could more easily exhaust available connections.
 
 - Individual username with shared password
    - Pros:
       - Able to track who made changes
+      - No overhead of password resets
    - Cons:
-      - Additional support overhead
+      - Additional work to setup user.  Script user setup?
       - Security implications of shared password
-      - Would require administration overhead of permissions models on postgres schemas
+      - Could have users set to wrong user
 
 - Individual username with passwords stored in Vault
    - Pros:
       - Able to track who made changes
+      - Users already using Vault for other access to secrets
+      - Provisioning model in Vault to also create role
    - Cons:
-      - Would require administration overhead of permissions models on postgres schemas
+      - Vault's model assumes you are using temporary credentials.  We can create long lived temporary credential, but not ideal.  Best option would be to create own connector.  Seems possible, but additional overhead to test and install on Vault cluster
       - Users would need obtain the temporary user-password from vault and modify their db-auth.yaml file
 
 - LDAP
+   - Pros:
+      - Works with test LDAP Server
+   - Cons
+      - Passwords set in clear text
+      - SLAC LDAP server would need to be modified to support LDAP or new LDAP server deployed
+
+- LDAPS
     - Cons
-      - Does not currently work.  LDAPS and LDAP with Start TLS were tested for authentication. An unknown error was returned by Postgres.  It also appears that PG Bouncer does not support LDAP based on an open issue in the PG Bouncer GitHub repository.  The following options are available for authentication.
+      - Does not currently work.  LDAPS and LDAP with Start TLS were tested for authentication. An unknown error was returned by Postgres.  It also appears that PG Bouncer does not support LDAP based on an open issue in the PG Bouncer GitHub repository.
+      - Passwords would need to updated every few months based on the password expiration policies and would have increases support tickets to help end users resolve
 
 scram-sha-256 will be used for password encryption as is now is the default for Postgres 14.  This encryption method was previously used by Butler in other environments.
 
