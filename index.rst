@@ -69,6 +69,7 @@ Security requirements and considerations for authentication and authorization ar
 - Track activity by user to determine who made changes.  Difficult to track by IP Address because all connections will come from a different Kubernetes cluster and NATed.
 
 Considerations for discussion
+
 - What would be damaging operations to Butler?  Drops, deletes?, etc..?
 - Does everyone need access to write to personal schemas and Butler schemas?  Or subset?
 - Client/Server Butler may be available at some point which removes requirements for individual user accounts for most users
